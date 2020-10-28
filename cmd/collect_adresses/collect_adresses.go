@@ -68,10 +68,9 @@ func main() {
 						if err == nil {
 							break
 						}
-					}
-					if err != nil {
-						logs.Error(err)
-						return
+						if err != nil {
+							logs.Error(err)
+						}
 					}
 
 					// add address
