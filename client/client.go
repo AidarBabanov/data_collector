@@ -109,7 +109,7 @@ func (c *Client) doSimpleRequest(method, urlPath string, urlParams, headers map[
 		}
 		err = jsoniter.Unmarshal(bodyBytes, response)
 		if err != nil {
-			return err
+			return fmt.Errorf("can't unmarshal response; %s", string(bodyBytes))
 		}
 	} else {
 		return fmt.Errorf("response status is not OK; %s", string(bodyBytes))

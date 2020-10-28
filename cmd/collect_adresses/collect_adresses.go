@@ -29,8 +29,8 @@ func main() {
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
 
-	uniswapClient := client.NewGraphQLClient(uniswap_data.BASE_URL, 15*time.Second, 200*time.Millisecond)
-	etherscanClient := client.NewHttpClient(15*time.Second, 200*time.Millisecond)
+	uniswapClient := client.NewGraphQLClient(uniswap_data.BASE_URL, 15*time.Second, 275*time.Millisecond)
+	etherscanClient := client.NewHttpClient(15*time.Second, 275*time.Millisecond)
 	err = uniswapClient.StartDelayer()
 	if err != nil {
 		logs.Error(err)
