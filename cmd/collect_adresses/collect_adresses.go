@@ -16,6 +16,7 @@ import (
 	"data_collector/models/etherscan"
 	"data_collector/models/uniswap"
 	"data_collector/uniswap_data"
+	"data_collector/utils"
 	"encoding/csv"
 	"fmt"
 	"github.com/Workiva/go-datastructures/set"
@@ -32,6 +33,7 @@ var (
 )
 
 func main() {
+	utils.InitLogsCores()
 	// load environment variables
 	err := godotenv.Load()
 	if err != nil {
@@ -71,7 +73,7 @@ func main() {
 		// 'skip' parameter skips certain amount of transactions (in our we skip 1000 transactions each time)
 		// 'first' parameter takes certain amount of transactions for response (in our case we take 1000 transactions)
 		getTransactionsQuery := fmt.Sprintf(uniswap_data.GET_TRANSACTIONS, skip, first)
-		var transactions uniswap.TransactionsData
+		var transactions uniswap.TransactionsResponse
 		err = uniswapClient.DoGraphqlRequest(getTransactionsQuery, &transactions)
 		if err != nil {
 			logs.Error(err)
@@ -88,7 +90,7 @@ func main() {
 					// transaction.Id is hash of transaction
 					// each request in etherscan needs a key, etherscan_api_key is key parameter
 					url := fmt.Sprintf(etherscan_data.GET_TRANSACTION_BY_HASH, transaction.Id, etherscan_api_key)
-					var transaction etherscan.Transaction
+					var transaction etherscan.TransactionResponse
 					// use for loop to be sure that data is loaded
 					for i := 0; i < 10; i++ {
 						err = etherscanClient.DoRequest(http.MethodGet, url, nil, nil, nil, &transaction)

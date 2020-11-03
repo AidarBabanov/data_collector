@@ -9,3 +9,7 @@ const (
 	"variables":{}
 }`
 )
+
+var (
+	GET_TRANSACTION = "{\"query\":\"{\\n  transaction(id:\\\"%s\\\"){\\n    id\\n    swaps{\\n      pair{\\n        token0{\\n          id\\n          symbol\\n          name\\n        }\\n        token1{\\n          id\\n          symbol\\n          name\\n        }\\n      }\\n      \\n      amount0In\\n      amount1In\\n      \\n      amount0Out\\n      amount1Out\\n    }\\n  }\\n}\\n\",\"variables\":{}}"
+)
