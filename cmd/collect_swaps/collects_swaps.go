@@ -122,7 +122,7 @@ func main() {
 		}
 		buffer := make(chan struct{}, runtime.NumCPU())
 		mu := new(sync.Mutex)
-		var swaps []models.Swap
+		swaps := []models.Swap{}
 		wg := new(sync.WaitGroup)
 		for _, tx := range addressTxs.Result {
 			buffer <- struct{}{}
