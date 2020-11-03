@@ -70,7 +70,7 @@ func main() {
 	}
 
 	// create clients for etherscan and uniswap
-	uniswapClient := client.NewGraphQLClient(uniswap_data.BASE_URL, 15*time.Second, 200*time.Millisecond)
+	uniswapClient := client.NewGraphQLClient(uniswap_data.BASE_URL, 15*time.Second, 75*time.Millisecond)
 	etherscanClient := client.NewHttpClient(15*time.Second, 200*time.Millisecond)
 	err = uniswapClient.StartDelayer()
 	if err != nil {
