@@ -122,7 +122,7 @@ func main() {
 		}
 		buffer := make(chan struct{}, runtime.NumCPU())
 		mu := new(sync.Mutex)
-		swaps := []models.Swap{}
+		var swaps []models.Swap
 		wg := new(sync.WaitGroup)
 		for _, tx := range addressTxs.Result {
 			buffer <- struct{}{}
@@ -209,10 +209,12 @@ func main() {
 			}(tx)
 		}
 		wg.Wait()
-		err = writer.WriteStructs(swaps)
-		if err != nil {
-			logs.Error(err)
-			return
+		if len(swaps) > 0 {
+			err = writer.WriteStructs(swaps)
+			if err != nil {
+				logs.Error(err)
+				return
+			}
 		}
 		logs.Info("Addresses managed: %d; swaps saved: %d", addrIndex+1, totalSwaps)
 	}
