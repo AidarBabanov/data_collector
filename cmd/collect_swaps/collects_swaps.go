@@ -49,7 +49,7 @@ func main() {
 	if err != nil {
 		logs.Error(err)
 	}
-	etherscan_api_key := os.Getenv("ETHERSCAN_API_KEY")
+	etherscanApiKey := os.Getenv("ETHERSCAN_API_KEY")
 
 	if err != nil {
 		logs.Error(err)
@@ -105,7 +105,7 @@ func main() {
 	totalSwaps := 0
 
 	for addrIndex, address := range addresses {
-		url := fmt.Sprintf(etherscan_data.GET_TRANSACTIONS_BY_ADDRESS, address, page, offset, etherscan_api_key)
+		url := fmt.Sprintf(etherscan_data.GET_TRANSACTIONS_BY_ADDRESS, address, page, offset, etherscanApiKey)
 		addressTxs := etherscan.AddressTransactionsResponse{}
 		for i := 0; i < 10; i++ {
 			err = etherscanClient.DoRequest(http.MethodGet, url, nil, nil, nil, &addressTxs)
