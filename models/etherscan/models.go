@@ -4,6 +4,7 @@ import jsoniter "github.com/json-iterator/go"
 
 type Transaction struct {
 	Hash              string          `json:"hash"`
+	BlockNumber       string          `json:"blockNumber"`
 	From              string          `json:"from"`
 	To                string          `json:"to"`
 	Timestamp         jsoniter.Number `json:"timeStamp"`
@@ -21,4 +22,13 @@ type AddressTransactionsResponse struct {
 	Status  jsoniter.Number `json:"status"`
 	Message string          `json:"message"`
 	Result  []Transaction   `json:"result"`
+}
+
+type BlockResponse struct {
+	Result Block `json:"result"`
+}
+
+type Block struct {
+	Timestamp string `json:"timestamp"`
+	Hash      string `json:"hash"`
 }

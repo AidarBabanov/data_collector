@@ -13,26 +13,19 @@ import (
 type Client struct {
 	client    *http.Client
 	delay     time.Duration
-	stopCh    chan struct{}
+	StopCh    chan struct{}
 	requestCh chan struct{}
 }
 
 func NewHttpClient(timeout time.Duration, delay time.Duration) *Client {
 	client := new(Client)
 	client.delay = delay
-	client.stopCh = make(chan struct{})
+	client.StopCh = make(chan struct{})
 	client.requestCh = make(chan struct{})
 	client.client = &http.Client{
 		Timeout: timeout,
 	}
 	return client
-}
-
-func (c *Client) freeRequestCh() {
-	select {
-	case <-c.requestCh:
-	default:
-	}
 }
 
 func (c *Client) delayerProcess() {
@@ -46,10 +39,10 @@ func (c *Client) delayerProcess() {
 			return
 		}
 		select {
-		case <-c.stopCh:
+		case <-c.StopCh:
 			return
 		case <-timer.C:
-			c.freeRequestCh()
+			<-c.requestCh
 			timer.Reset(c.delay)
 		}
 	}
@@ -57,7 +50,7 @@ func (c *Client) delayerProcess() {
 
 func (c *Client) StartDelayer() error {
 	if c.IsClosed() {
-		return fmt.Errorf("can't start delayer client stopped")
+		return fmt.Errorf("can't start delayer; client is stopped")
 	}
 	go c.delayerProcess()
 	return nil
@@ -65,7 +58,7 @@ func (c *Client) StartDelayer() error {
 
 func (c *Client) IsClosed() bool {
 	select {
-	case <-c.stopCh:
+	case <-c.StopCh:
 		return true
 	default:
 		return false
@@ -74,7 +67,7 @@ func (c *Client) IsClosed() bool {
 
 func (c *Client) Close() {
 	if !c.IsClosed() {
-		close(c.stopCh)
+		close(c.StopCh)
 	}
 }
 

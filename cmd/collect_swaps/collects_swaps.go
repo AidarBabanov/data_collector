@@ -51,10 +51,6 @@ func main() {
 	}
 	etherscanApiKey := os.Getenv("ETHERSCAN_API_KEY")
 
-	if err != nil {
-		logs.Error(err)
-	}
-
 	// create output outputFile with addresses
 	outputFile, err := os.Create("swaps.csv")
 	if err != nil {
