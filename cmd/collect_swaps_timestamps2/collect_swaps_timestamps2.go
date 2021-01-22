@@ -2,9 +2,9 @@ package main
 
 import (
 	"data_collector/client"
-	"data_collector/etherscan_data"
+	"data_collector/etherplorer_data"
 	"data_collector/models"
-	"data_collector/models/etherscan"
+	"data_collector/models/etherplorer"
 	"data_collector/utils"
 	"fmt"
 	"github.com/astaxie/beego/logs"
@@ -12,7 +12,6 @@ import (
 	"github.com/joho/godotenv"
 	"net/http"
 	"os"
-	"strconv"
 	"sync"
 	"time"
 )
@@ -24,7 +23,6 @@ func main() {
 	if err != nil {
 		logs.Error(err)
 	}
-	etherscanApiKey := os.Getenv("ETHERSCAN_API_KEY")
 
 	swapsFile, err := os.OpenFile("swaps.csv", os.O_RDONLY|os.O_CREATE, os.ModePerm)
 	if err != nil {
@@ -42,9 +40,17 @@ func main() {
 	if err != nil {
 		logs.Error(err)
 	}
-
-	etherscanClient := client.NewHttpClient(15*time.Second, 250*time.Millisecond, "", make(chan *client.Client))
-	err = etherscanClient.StartDelayer()
+	manager := client.NewManager(15*time.Second, 127*time.Millisecond,
+		"EK-wxHtH-TsiS9mC-L7L9q",
+		"EK-k3NuB-5nkpo73-fAWWh",
+		"EK-gvBaW-kRGqqqd-wUqsS",
+		"EK-4BgiR-SqrBSwq-WywCm",
+		"EK-fJjCg-zpPvbNm-hdjYL",
+		"EK-daRTQ-RZ9hqEq-YUqwQ",
+		"EK-uwxUP-KNjKU1U-EfGds",
+		"EK-rrZwL-esiyuuq-1bjSm",
+	)
+	err = manager.Serve()
 	if err != nil {
 		logs.Error(err)
 		os.Exit(-1)
@@ -62,41 +68,24 @@ func main() {
 			mu.RLock()
 			swap := swaps[i]
 			mu.RUnlock()
-			url := fmt.Sprintf(etherscan_data.GET_TRANSACTION_BY_HASH, swap.Transaction, etherscanApiKey)
-			var transaction etherscan.TransactionResponse
-			err := etherscanClient.DoRequest(http.MethodGet, url, nil, nil, nil, &transaction)
+			var transaction etherplorer.TransactionInfo
+			var err error
+			f := func(cl *client.Client) {
+				url := fmt.Sprintf(etherplorer_data.GET_TRANSACTION_INFO, swap.Transaction, cl.Key)
+				err = cl.DoRequest(http.MethodGet, url, nil, nil, nil, &transaction)
+			}
+			manager.UseClient(f)
 			for k := 0; err != nil && k < 10; k++ {
-				err = etherscanClient.DoRequest(http.MethodGet, url, nil, nil, nil, &transaction)
+				manager.UseClient(f)
 			}
 			if err != nil {
 				logs.Error(err)
 				return
 			}
-			var block etherscan.BlockResponse
-			url = fmt.Sprintf(etherscan_data.GET_BLOCK_BY_NUMBER, transaction.Result.BlockNumber, etherscanApiKey)
-			err = etherscanClient.DoRequest(http.MethodGet, url, nil, nil, nil, &block)
-			for k := 0; err != nil && k < 10; k++ {
-				err = etherscanClient.DoRequest(http.MethodGet, url, nil, nil, nil, &block)
-			}
-			if err != nil {
-				logs.Error(err)
-				return
-			}
-			if len(block.Result.Timestamp) > 3 {
-				timestamp, err := strconv.ParseInt(block.Result.Timestamp[2:], 16, 64)
-				if err != nil {
-					logs.Error(err)
-					return
-				} else {
-					mu.Lock()
-					// todo parse block number
-					//swaps[i].BlockNumber = transaction.Result.BlockNumber
-					swaps[i].Timestamp = timestamp
-					mu.Unlock()
-				}
-			} else {
-				logs.Error("Wrong timestamp %v. Index: %d, transaction: %+v, block: %+v.", block.Result.Timestamp, i, transaction, block)
-			}
+			mu.Lock()
+			swaps[i].BlockNumber = transaction.BlockNumber
+			swaps[i].Timestamp = transaction.Timestamp
+			mu.Unlock()
 		}(i)
 
 		if i%1000 == 0 {

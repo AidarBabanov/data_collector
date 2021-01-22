@@ -14,6 +14,6 @@ type Swap struct {
 	Gas               int64   `json:"Gas"`
 	CumulativeGasUsed int64   `json:"CumulativeGasUsed"`
 	GasUsed           int64   `json:"GasUsed"`
-	BlockNumber       string  `json:"BlockNumber"`
+	BlockNumber       int64   `json:"BlockNumber"`
 	Timestamp         int64   `json:"Timestamp"`
 }

@@ -13,7 +13,7 @@ type GraphqlClient struct {
 func NewGraphQLClient(url string, requestTimeout time.Duration, delay time.Duration) *GraphqlClient {
 	client := new(GraphqlClient)
 	client.url = url
-	client.Client = NewHttpClient(requestTimeout, delay)
+	//client.Client = NewHttpClient(requestTimeout, delay)
 	return client
 }
 

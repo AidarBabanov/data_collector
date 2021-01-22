@@ -13,15 +13,19 @@ import (
 type Client struct {
 	client    *http.Client
 	delay     time.Duration
-	StopCh    chan struct{}
+	stopCh    chan struct{}
 	requestCh chan struct{}
+	Key       string
+	notifyCh  chan *Client
 }
 
-func NewHttpClient(timeout time.Duration, delay time.Duration) *Client {
+func NewHttpClient(timeout time.Duration, delay time.Duration, key string, notifyCh chan *Client) *Client {
 	client := new(Client)
 	client.delay = delay
-	client.StopCh = make(chan struct{})
-	client.requestCh = make(chan struct{})
+	client.stopCh = make(chan struct{})
+	client.requestCh = make(chan struct{}, 2)
+	client.Key = key
+	client.notifyCh = notifyCh
 	client.client = &http.Client{
 		Timeout: timeout,
 	}
@@ -39,10 +43,14 @@ func (c *Client) delayerProcess() {
 			return
 		}
 		select {
-		case <-c.StopCh:
+		case <-c.stopCh:
 			return
 		case <-timer.C:
-			<-c.requestCh
+			select {
+			case <-c.requestCh:
+			default:
+			}
+			c.notifyCh <- c
 			timer.Reset(c.delay)
 		}
 	}
@@ -58,7 +66,7 @@ func (c *Client) StartDelayer() error {
 
 func (c *Client) IsClosed() bool {
 	select {
-	case <-c.StopCh:
+	case <-c.stopCh:
 		return true
 	default:
 		return false
@@ -67,7 +75,7 @@ func (c *Client) IsClosed() bool {
 
 func (c *Client) Close() {
 	if !c.IsClosed() {
-		close(c.StopCh)
+		close(c.stopCh)
 	}
 }
 
@@ -102,10 +110,10 @@ func (c *Client) doSimpleRequest(method, urlPath string, urlParams, headers map[
 		}
 		err = jsoniter.Unmarshal(bodyBytes, response)
 		if err != nil {
-			return fmt.Errorf("can't unmarshal response; %s", string(bodyBytes))
+			return fmt.Errorf("key:%s; can't unmarshal response; %s", c.Key, string(bodyBytes))
 		}
 	} else {
-		return fmt.Errorf("response status is not OK; %s", string(bodyBytes))
+		return fmt.Errorf("key: %s; response status is not OK; %s", c.Key, string(bodyBytes))
 	}
 	return nil
 }
