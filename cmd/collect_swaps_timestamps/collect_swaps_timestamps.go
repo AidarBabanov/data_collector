@@ -89,6 +89,7 @@ func main() {
 					return
 				} else {
 					mu.Lock()
+					swaps[i].BlockNumber = transaction.Result.BlockNumber
 					swaps[i].Timestamp = timestamp
 					mu.Unlock()
 				}
